@@ -157,7 +157,7 @@ def get_qwen_question_template_answer(question: TestOutputPredictionProblem, tes
     return prompt
 
 def format_prompt_test_output(
-    question: TestOutputPredictionProblem, LanguageModelStyle: LMStyle
+    question: TestOutputPredictionProblem, LanguageModelStyle: LMStyle, tokenizer=None
 ) -> str:
     testcase_input = question.test[0].input
     if LanguageModelStyle == LMStyle.OpenAIChat:
@@ -176,7 +176,7 @@ def format_prompt_test_output(
             },
         ]
         return chat_messages
-    if LanguageModelStyle == LMStyle.LLaMa3:
+    if LanguageModelStyle in {LMStyle.LLaMa3, LMStyle.GenericBase}:
         chat_messages = [
             {
                 "role": "system",
@@ -191,18 +191,17 @@ def format_prompt_test_output(
                 ),
             },
         ]
-        from transformers import AutoTokenizer
-
-        tokenizer = AutoTokenizer.from_pretrained(
-            "meta-llama/Meta-Llama-3-8B-Instruct", padding_side="left", use_fast=False
-        )
-        return tokenizer.apply_chat_template(
-            chat_messages,
-            tokenize=False,
-            add_generation_prompt=True,
-            truncation=False,
-            padding=False,
-        )
+        
+        if tokenizer:
+            return tokenizer.apply_chat_template(
+                chat_messages,
+                tokenize=False,
+                add_generation_prompt=True,
+                truncation=False,
+                padding=False,
+            )
+        else:
+            return chat_messages
     elif LanguageModelStyle == LMStyle.Claude:
         prompt = f"{HUMAN_PROMPT}\n{PromptConstants.SYSTEM_MESSAGE_CHAT_GENERIC}\n\n"
         prompt += f"{get_generic_question_template_test_completion(question, testcase_input).rstrip()}\n{AI_PROMPT}"

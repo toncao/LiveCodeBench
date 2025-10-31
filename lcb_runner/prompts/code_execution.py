@@ -65,16 +65,16 @@ assert {input} == ??
 """
 
 
-def format_prompt_execution(question, LanguageModelStyle):
-    return format_prompt_execution_base(question, LanguageModelStyle, False)
+def format_prompt_execution(question, LanguageModelStyle, tokenizer):
+    return format_prompt_execution_base(question, LanguageModelStyle, False, tokenizer)
 
 
 def format_prompt_execution_cot(question, LanguageModelStyle):
-    return format_prompt_execution_base(question, LanguageModelStyle, True)
+    return format_prompt_execution_base(question, LanguageModelStyle, True, tokenizer)
 
 
 def format_prompt_execution_base(
-    question: CodeExecutionProblem, LanguageModelStyle: LMStyle, cot: bool
+    question: CodeExecutionProblem, LanguageModelStyle: LMStyle, cot: bool, tokenizer=None
 ) -> str:
     code = question.code
     input = question.input
@@ -95,7 +95,7 @@ def format_prompt_execution_base(
             {"role": "user", "content": prompt},
         ]
         return chat_messages
-    if LanguageModelStyle == LMStyle.LLaMa3:
+    if LanguageModelStyle in {LMStyle.LLaMa3, LMStyle.GenericBase}:
         chat_messages = [
             {
                 "role": "system",
@@ -105,18 +105,16 @@ def format_prompt_execution_base(
         chat_messages += [
             {"role": "user", "content": prompt},
         ]
-        from transformers import AutoTokenizer
-
-        tokenizer = AutoTokenizer.from_pretrained(
-            "meta-llama/Meta-Llama-3-8B-Instruct", padding_side="left", use_fast=False
-        )
-        return tokenizer.apply_chat_template(
-            chat_messages,
-            tokenize=False,
-            add_generation_prompt=True,
-            truncation=False,
-            padding=False,
-        )
+        if tokenizer:
+            return tokenizer.apply_chat_template(
+                chat_messages,
+                tokenize=False,
+                add_generation_prompt=True,
+                truncation=False,
+                padding=False,
+            )
+        else:
+            return chat_messages
 
     elif LanguageModelStyle == LMStyle.Claude:
         return prompt

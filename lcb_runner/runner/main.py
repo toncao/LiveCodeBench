@@ -3,7 +3,7 @@ import json
 
 from lcb_runner.runner.parser import get_args
 from lcb_runner.utils.scenarios import Scenario
-from lcb_runner.lm_styles import LanguageModelStore
+from lcb_runner.lm_styles import LanguageModelStore, LanguageModel, LMStyle
 from lcb_runner.runner.runner_utils import build_runner
 from lcb_runner.utils.path_utils import get_output_path
 from lcb_runner.evaluation import extract_instance_results
@@ -18,7 +18,12 @@ from lcb_runner.runner.scenario_router import (
 def main():
     args = get_args()
 
-    model = LanguageModelStore[args.model]
+    model = LanguageModelStore.get(args.model, 
+                                   LanguageModel(model_name=args.model, 
+                                                            model_repr=args.model.split("/")[-1],
+                                                            model_style=LMStyle.GenericBase,
+                                                            release_date=args.start_date))
+    
     benchmark, format_prompt = build_prompt_benchmark(args)
     if args.debug:
         print(f"Running with {len(benchmark)} instances in debug mode")
@@ -221,6 +226,9 @@ def main():
 
         with open(eval_all_file, "w") as f:
             json.dump(save_eval_results, f, indent=4)
+        
+        from pprint import pprint
+        pprint(save_eval_results)
 
 
 if __name__ == "__main__":

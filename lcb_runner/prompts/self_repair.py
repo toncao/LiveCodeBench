@@ -173,7 +173,7 @@ def get_qwen_question_template_answer(question: str, code, result, metadata):
     return prompt
 
 def format_prompt_self_repair(
-    question: str, LanguageModelStyle: LMStyle, code, result, metadata
+    question: str, LanguageModelStyle: LMStyle, code, result, metadata, tokenizer=None
 ) -> str:
     if result:
         # The code is accepted, no need to change anything.
@@ -193,7 +193,7 @@ def format_prompt_self_repair(
             },
         ]
         return chat_messages
-    if LanguageModelStyle == LMStyle.LLaMa3:
+    if LanguageModelStyle in {LMStyle.LLaMa3, LMStyle.GenericBase}:
         chat_messages = [
             {"role": "system", "content": PromptConstants.SYSTEM_MESSAGE_GENERIC},
         ]
@@ -205,19 +205,17 @@ def format_prompt_self_repair(
                 ),
             },
         ]
-
-        from transformers import AutoTokenizer
-
-        tokenizer = AutoTokenizer.from_pretrained(
-            "meta-llama/Meta-Llama-3-8B-Instruct", padding_side="left", use_fast=False
-        )
-        return tokenizer.apply_chat_template(
-            chat_messages,
-            tokenize=False,
-            add_generation_prompt=True,
-            truncation=False,
-            padding=False,
-        )
+        if tokenizer:
+            return tokenizer.apply_chat_template(
+                chat_messages,
+                tokenize=False,
+                add_generation_prompt=True,
+                truncation=False,
+                padding=False,
+            )
+        
+        else:
+            return chat_messages
     elif LanguageModelStyle == LMStyle.Claude:
         prompt = f"{HUMAN_PROMPT}\n{PromptConstants.SYSTEM_MESSAGE_GENERIC}\n\n{get_generic_question_template_answer(question, code, result, metadata).rstrip()}\n{AI_PROMPT}"
         return prompt

@@ -1,3 +1,4 @@
+from importlib.resources import files
 import json
 
 try:
@@ -166,10 +167,13 @@ def get_deepseek_r1_question_template_answer(question: CodeGenerationProblem):
     return prompt
 
 
-with open("lcb_runner/prompts/few_shot_examples/generation/func.json") as f:
+# Get the path to your package's resource files
+resource_path = files('lcb_runner').joinpath('prompts/few_shot_examples/generation')
+
+with open(resource_path / 'func.json') as f:
     func = json.load(f)
 
-with open("lcb_runner/prompts/few_shot_examples/generation/stdin.json") as f:
+with open(resource_path / 'stdin.json') as f:
     stdin = json.load(f)
 
 
@@ -207,7 +211,9 @@ def get_base_model_question_template_answer(question: CodeGenerationProblem):
 
 
 def format_prompt_generation(
-    question: CodeGenerationProblem, LanguageModelStyle: LMStyle
+    question: CodeGenerationProblem, 
+    LanguageModelStyle: LMStyle,
+    tokenizer=None,
 ) -> str:
     if LanguageModelStyle in [
         LMStyle.OpenAIChat,
@@ -249,7 +255,7 @@ def format_prompt_generation(
         ]
         return chat_messages
 
-    if LanguageModelStyle == LMStyle.LLaMa3:
+    if LanguageModelStyle in {LMStyle.LLaMa3, LMStyle.GenericBase}:
         chat_messages = [
             {
                 "role": "system",
@@ -262,18 +268,16 @@ def format_prompt_generation(
                 "content": get_generic_question_template_answer(question),
             },
         ]
-        from transformers import AutoTokenizer
-
-        tokenizer = AutoTokenizer.from_pretrained(
-            "meta-llama/Meta-Llama-3-8B-Instruct", padding_side="left", use_fast=False
-        )
-        return tokenizer.apply_chat_template(
-            chat_messages,
-            tokenize=False,
-            add_generation_prompt=True,
-            truncation=False,
-            padding=False,
-        )
+        if tokenizer:
+            return tokenizer.apply_chat_template(
+                chat_messages,
+                tokenize=False,
+                add_generation_prompt=True,
+                truncation=False,
+                padding=False,
+            )
+        else:
+            return chat_messages
 
     if LanguageModelStyle == LMStyle.Claude:
         prompt = f"{HUMAN_PROMPT}\n"
@@ -335,50 +339,6 @@ def format_prompt_generation(
         prompt += f"{get_deepseek_r1_question_template_answer(question)}"
         return prompt
 
-    if LanguageModelStyle == LMStyle.GenericBase:
-        prompt = get_base_model_question_template_answer(question)
-        return prompt
-
     raise NotImplementedError(
         f"LanguageModelStyle {LanguageModelStyle} not implemented"
     )
-
-
-def test():
-    import pathlib
-
-    base_dir = "logs/example_prompts/generation"
-    pathlib.Path(base_dir).mkdir(parents=True, exist_ok=True)
-
-    for lmstyle in LMStyle:
-        generation_problem = CodeGenerationProblem(
-            "title",
-            "question-content",
-            "leetcode",
-            "question_id",
-            "contest_id",
-            "contest_date",
-            "",
-            "easy",
-            "[]",
-            "[]",
-            "{}",
-        )
-        prompt1 = format_prompt_generation(generation_problem, lmstyle)
-        with open(f"{base_dir}/{lmstyle}_1.txt", "w") as f:
-            try:
-                f.write(prompt1)
-            except TypeError:
-                f.write(json.dumps(prompt1))
-
-        generation_problem.starter_code = "starter code"
-        prompt2 = format_prompt_generation(generation_problem, lmstyle)
-        with open(f"{base_dir}/{lmstyle}_2.txt", "w") as f:
-            try:
-                f.write(prompt2)
-            except TypeError:
-                f.write(json.dumps(prompt2))
-
-
-if __name__ == "__main__":
-    test()

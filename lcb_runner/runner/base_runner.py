@@ -152,6 +152,7 @@ class BaseRunner(ABC):
                             code_list[code_idx],
                             graded_list[code_idx],
                             metadata[code_idx],
+                            tokenizer
                         )
                         if prompt == "":
                             outputs[problem_idx][code_idx] = output_list[code_idx]
