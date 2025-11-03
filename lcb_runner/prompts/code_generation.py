@@ -1,6 +1,3 @@
-from importlib.resources import files
-import json
-
 try:
     from anthropic import HUMAN_PROMPT, AI_PROMPT
 except ImportError:
@@ -166,15 +163,11 @@ def get_deepseek_r1_question_template_answer(question: CodeGenerationProblem):
     prompt += f"<｜Assistant｜>"
     return prompt
 
-
-# Get the path to your package's resource files
-resource_path = files('lcb_runner').joinpath('prompts/few_shot_examples/generation')
-
-with open(resource_path / 'func.json') as f:
-    func = json.load(f)
-
-with open(resource_path / 'stdin.json') as f:
-    stdin = json.load(f)
+from importlib.resources import read_text
+import json
+# Read the JSON files directly as text
+func = json.loads(read_text('lcb_runner.prompts.few_shot_examples.generation', 'func.json'))
+stdin = json.loads(read_text('lcb_runner.prompts.few_shot_examples.generation', 'stdin.json'))
 
 
 def get_base_model_question_template_answer(question: CodeGenerationProblem):
