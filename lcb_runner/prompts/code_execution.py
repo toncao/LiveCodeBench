@@ -95,17 +95,17 @@ def format_prompt_execution_base(
             {"role": "user", "content": prompt},
         ]
         return chat_messages
-    if LanguageModelStyle in {LMStyle.LLaMa3, LMStyle.GenericBase}:
-        chat_messages = [
-            {
-                "role": "system",
-                "content": system_message,
-            },
-        ]
-        chat_messages += [
-            {"role": "user", "content": prompt},
-        ]
+    if LanguageModelStyle in {LMStyle.GenericBase}:
         if tokenizer:
+            chat_messages = [
+                {
+                    "role": "system",
+                    "content": system_message,
+                },
+            ]
+            chat_messages += [
+                {"role": "user", "content": prompt},
+            ]
             return tokenizer.apply_chat_template(
                 chat_messages,
                 tokenize=False,
@@ -114,67 +114,8 @@ def format_prompt_execution_base(
                 padding=False,
             )
         else:
-            return chat_messages
+            return prompt
 
-    elif LanguageModelStyle == LMStyle.Claude:
-        return prompt
-    elif LanguageModelStyle == LMStyle.Claude3:
-        prompt = [
-            {
-                "role": "user",
-                "content": prompt,
-            }
-        ]
-        return system_message, prompt
-    elif LanguageModelStyle == LMStyle.Gemini:
-        return prompt
-    elif LanguageModelStyle == LMStyle.StarCoderInstruct:
-        return prompt
-    elif LanguageModelStyle == LMStyle.DeepSeekCodeInstruct:
-        return prompt
-    elif LanguageModelStyle == LMStyle.CodeLLaMaInstruct:
-        return prompt
-    elif LanguageModelStyle == LMStyle.MagiCoder:
-        return prompt
-    elif LanguageModelStyle == LMStyle.WizardCoder:
-        return prompt
-    elif LanguageModelStyle == LMStyle.Phind:
-        return prompt
-    elif LanguageModelStyle == LMStyle.OC:
-        return prompt
-    elif LanguageModelStyle == LMStyle.MistralWeb:
-        chat_messages = [
-            {
-                "role": "system",
-                "content": system_message,
-            },
-            {"role": "user", "content": prompt},
-        ]
-        return chat_messages
-    elif LanguageModelStyle == LMStyle.DracarysLlama:
-        chat_messages = [
-            {
-                "role": "system",
-                "content": system_message,
-            },
-        ]
-        chat_messages += [
-            {"role": "user", "content": prompt},
-        ]
-        from transformers import AutoTokenizer
-
-        tokenizer = AutoTokenizer.from_pretrained(
-            "abacusai/Dracarys-Llama-3.1-70B-Instruct", padding_side="right", use_fast=False
-        )
-        return tokenizer.apply_chat_template(
-            chat_messages,
-            tokenize=False,
-            add_generation_prompt=True,
-            truncation=False,
-            padding=False,
-        )
-    elif LanguageModelStyle == LMStyle.DracarysQwen:
-        return prompt
     else:
         raise NotImplementedError(
             f"LanguageModelStyle {LanguageModelStyle} not implemented"

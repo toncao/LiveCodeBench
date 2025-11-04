@@ -48,8 +48,10 @@ class VLLMRunner(BaseRunner):
                     continue
             remaining_prompts.append(prompt)
             remaining_indices.append(prompt_index)
+
+
         if remaining_prompts:
-            vllm_outputs = self.llm.generate(remaining_prompts, self.sampling_params)
+            vllm_outputs = self.llm.generate(remaining_prompts)
             if self.args.use_cache:
                 assert len(remaining_prompts) == len(vllm_outputs)
                 for index, remaining_prompt, vllm_output in zip(
