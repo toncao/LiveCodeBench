@@ -53,7 +53,7 @@ def get_generic_question_template_answer(question: str, code, result, metadata):
     return prompt
 
 def format_prompt_self_repair(
-    question: str, LanguageModelStyle: LMStyle, code, result, metadata, tokenizer=None
+    question: str, LanguageModelStyle: LMStyle, code, result, metadata
 ) -> str:
     if result:
         # The code is accepted, no need to change anything.
@@ -74,28 +74,11 @@ def format_prompt_self_repair(
         ]
         return chat_messages
     if LanguageModelStyle in {LMStyle.GenericBase}:
-        chat_messages = [
-            {"role": "system", "content": PromptConstants.SYSTEM_MESSAGE_GENERIC},
-        ]
-        chat_messages += [
-            {
-                "role": "user",
-                "content": get_generic_question_template_answer(
-                    question, code, result, metadata
-                ),
-            },
-        ]
-        if tokenizer:
-            return tokenizer.apply_chat_template(
-                chat_messages,
-                tokenize=False,
-                add_generation_prompt=True,
-                truncation=False,
-                padding=False,
-            )
+
+        return get_generic_question_template_answer(
+                question, code, result, metadata
+            ) + "\n\n" + PromptConstants.FORMATTING_REPEAT,
         
-        else:
-            return chat_messages
     else:
         raise NotImplementedError(
             f"LanguageModelStyle {LanguageModelStyle} not implemented"

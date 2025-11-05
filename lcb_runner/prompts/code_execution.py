@@ -65,16 +65,16 @@ assert {input} == ??
 """
 
 
-def format_prompt_execution(question, LanguageModelStyle, tokenizer):
-    return format_prompt_execution_base(question, LanguageModelStyle, False, tokenizer)
+def format_prompt_execution(question, LanguageModelStyle):
+    return format_prompt_execution_base(question, LanguageModelStyle, False)
 
 
 def format_prompt_execution_cot(question, LanguageModelStyle):
-    return format_prompt_execution_base(question, LanguageModelStyle, True, tokenizer)
+    return format_prompt_execution_base(question, LanguageModelStyle, True)
 
 
 def format_prompt_execution_base(
-    question: CodeExecutionProblem, LanguageModelStyle: LMStyle, cot: bool, tokenizer=None
+    question: CodeExecutionProblem, LanguageModelStyle: LMStyle, cot: bool
 ) -> str:
     code = question.code
     input = question.input
@@ -96,24 +96,6 @@ def format_prompt_execution_base(
         ]
         return chat_messages
     if LanguageModelStyle in {LMStyle.GenericBase}:
-        if tokenizer:
-            chat_messages = [
-                {
-                    "role": "system",
-                    "content": system_message,
-                },
-            ]
-            chat_messages += [
-                {"role": "user", "content": prompt},
-            ]
-            return tokenizer.apply_chat_template(
-                chat_messages,
-                tokenize=False,
-                add_generation_prompt=True,
-                truncation=False,
-                padding=False,
-            )
-        else:
             return prompt
 
     else:

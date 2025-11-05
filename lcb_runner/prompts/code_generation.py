@@ -34,7 +34,6 @@ def get_generic_question_template_answer(question: CodeGenerationProblem):
 def format_prompt_generation(
     question: CodeGenerationProblem, 
     LanguageModelStyle: LMStyle,
-    tokenizer=None,
 ) -> str:
     if LanguageModelStyle in {
         LMStyle.OpenAIChat,
@@ -54,28 +53,8 @@ def format_prompt_generation(
         return chat_messages
 
     if LanguageModelStyle in {LMStyle.GenericBase}:
-        if tokenizer:
-            chat_messages = [
-                {
-                    "role": "system",
-                    "content": PromptConstants.SYSTEM_MESSAGE_GENERIC,
-                },
-            ]
-            chat_messages += [
-                {
-                    "role": "user",
-                    "content": get_generic_question_template_answer(question),
-                },
-            ]
-            return tokenizer.apply_chat_template(
-                chat_messages,
-                tokenize=False,
-                add_generation_prompt=True,
-                truncation=False,
-                padding=False,
-            )
-        else:
-            return f"{PromptConstants.SYSTEM_MESSAGE_GENERIC} \n\n {get_generic_question_template_answer(question)}"
+        
+        return f"{get_generic_question_template_answer(question)}"
 
     raise NotImplementedError(
         f"LanguageModelStyle {LanguageModelStyle} not implemented"

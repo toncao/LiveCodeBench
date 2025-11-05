@@ -68,7 +68,7 @@ def get_generic_question_template_test_completion(
     return prompt
 
 def format_prompt_test_output(
-    question: TestOutputPredictionProblem, LanguageModelStyle: LMStyle, tokenizer=None
+    question: TestOutputPredictionProblem, LanguageModelStyle: LMStyle
 ) -> str:
     testcase_input = question.test[0].input
     if LanguageModelStyle == LMStyle.OpenAIChat:
@@ -88,32 +88,9 @@ def format_prompt_test_output(
         ]
         return chat_messages
     if LanguageModelStyle in {LMStyle.GenericBase}:
-        if tokenizer:    
-            chat_messages = [
-                {
-                    "role": "system",
-                    "content": PromptConstants.SYSTEM_MESSAGE_CHAT_GENERIC,
-                },
-            ]
-            chat_messages += [
-                {
-                    "role": "user",
-                    "content": get_generic_question_template_test_completion(
-                        question, testcase_input
-                    ),
-                },
-            ]
-            return tokenizer.apply_chat_template(
-                chat_messages,
-                tokenize=False,
-                add_generation_prompt=True,
-                truncation=False,
-                padding=False,
+        return get_generic_question_template_test_completion(
+                question, testcase_input
             )
-        else:
-            return get_generic_question_template_test_completion(
-                    question, testcase_input
-                ),
     else:
         raise NotImplementedError(
             f"LanguageModelStyle {LanguageModelStyle} not implemented"
