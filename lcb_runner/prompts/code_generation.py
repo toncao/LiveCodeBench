@@ -53,7 +53,6 @@ def format_prompt_generation(
         return chat_messages
 
     if LanguageModelStyle in {LMStyle.GenericBase}:
-        
         return f"{get_generic_question_template_answer(question)}"
 
     raise NotImplementedError(
