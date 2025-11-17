@@ -140,11 +140,11 @@ _dataset_id = "livecodebench/code_generation_lite"
 _subset = "default"
 _datasplit = "test"
 _revision = "refs/pr/7"
-_data_dir = "release_latest"
+_release_version = "v6"
 
-def load_code_generation_dataset_not_fast(release_version="release_v6") -> list[CodeGenerationProblem]:
+def load_code_generation_dataset_not_fast(release_version=_release_version) -> list[CodeGenerationProblem]:
 
-    dataset = load_dataset(_dataset_id, data_dir=_data_dir, revision=_revision)[_datasplit]
+    dataset = load_dataset(_dataset_id, data_dir=release_version, revision=_revision)[_datasplit]
     dataset = [CodeGenerationProblem(**p) for p in dataset]  # type: ignore
     print(f"Loaded {len(dataset)} problems")
     return dataset
